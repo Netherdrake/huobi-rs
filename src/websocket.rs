@@ -46,17 +46,17 @@ impl<'a> WebSockets<'a> {
     pub fn new<Callback>(handler: Callback) -> WebSockets<'a>
     where
         Callback: FnMut(WebsocketEvent) -> APIResult<()> + 'a
-    {
-        WebSockets {
-            socket: None,
-            handler: Box::new(handler),
+        {
+            WebSockets {
+                socket: None,
+                handler: Box::new(handler),
+            }
         }
-    }
 
     pub fn connect(&mut self, endpoint: &str, symbols: Vec<&str>, channels: Vec<&str>) -> APIResult<()> {
         let wss: String = format!("{}{}", WEBSOCKET_URL, endpoint);
         let url = Url::parse(&wss)?;
-        ::log::info!("url:{}", url);
+        ::log::debug!("url:{}", url);
         match connect(url) {
             Ok(answer) => {
                 self.socket = Some(answer);
@@ -64,25 +64,25 @@ impl<'a> WebSockets<'a> {
                     if channel.contains("orderbook") && !channel.contains("partial_orderbook") {
                         for symbol in &symbols { 
                             let message = json!({
-                                "sub": format!("market.{}.depth.step6", symbol),       
+                                "sub": format!("market.{}.depth.step6", symbol),
                                 "id": "rustclient"
                             }); 
                             if let Some(ref mut socket) = self.socket {
                                 socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                ::log::info!("Write message {}", message.to_string());
+                                ::log::debug!("Write message {}", message.to_string());
                             };
                         }
                     }
                     if channel.contains("partial_orderbook") {
                         for symbol in &symbols { 
                             let message = json!({
-                                "sub": format!("market.{}.depth.size_150.high_freq", symbol),       
+                                "sub": format!("market.{}.depth.size_150.high_freq", symbol),
                                 "data_type": "incremental",
                                 "id": "rustclient"
                             }); 
                             if let Some(ref mut socket) = self.socket {
                                 socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                ::log::info!("Write message {}", message.to_string());
+                                ::log::debug!("Write message {}", message.to_string());
                             };
                         }
                     }
@@ -90,12 +90,12 @@ impl<'a> WebSockets<'a> {
                     if channel.contains("kline") {
                         for symbol in &symbols { 
                             let message = json!({
-                                "sub": format!("market.{}.{}", symbol, channel),       
+                                "sub": format!("market.{}.{}", symbol, channel),
                                 "id": "rustclient"
                             }); 
                             if let Some(ref mut socket) = self.socket {
                                 socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                ::log::info!("Write message {}", message.to_string());
+                                ::log::debug!("Write message {}", message.to_string());
                             };
                         }
                     }
@@ -104,12 +104,12 @@ impl<'a> WebSockets<'a> {
                     else if channel.contains("trade") {
                         for symbol in &symbols { 
                             let message = json!({
-                                "sub": format!("market.{}.trade.detail", symbol),       
+                                "sub": format!("market.{}.trade.detail", symbol),
                                 "id": "rustclient"
                             }); 
                             if let Some(ref mut socket) = self.socket {
                                 socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                ::log::info!("Write message {}", message.to_string());
+                                ::log::debug!("Write message {}", message.to_string());
                             };
                         }
                     }
@@ -117,7 +117,7 @@ impl<'a> WebSockets<'a> {
                 Ok(())
             }
             Err(e) => {
-                ::log::info!("Error during handshake {}", e);
+                ::log::error!("Error during handshake {}", e);
                 Err(Box::new(e))
             }
         }
@@ -126,7 +126,7 @@ impl<'a> WebSockets<'a> {
     pub fn connect_auth(&mut self, endpoint: &str,symbols: Vec<&str>, channels: Vec<&str>, access_key: &str, secret_key: &str ) -> APIResult<()> {
         let wss: String = format!("{}{}", WEBSOCKET_URL, endpoint);
         let url = Url::parse(&wss)?;
-        ::log::info!("url:{}", url);
+        ::log::debug!("url:{}", url);
 
         for symbol in symbols {
             SYMBOLS.lock().unwrap().push(symbol.to_string());
@@ -135,7 +135,7 @@ impl<'a> WebSockets<'a> {
         for channel in channels {
             CHANNELS.lock().unwrap().push(channel.to_string());
         }
-    
+
         match connect(url) {
             Ok(answer) => {
                 self.socket = Some(answer);
@@ -144,12 +144,12 @@ impl<'a> WebSockets<'a> {
                 params.insert("SignatureMethod".to_string(), "HmacSHA256".to_string());
                 params.insert("SignatureVersion".to_string(), "2".to_string());
                 let utctime = get_timestamp();
-                params.insert("Timestamp".to_string(), utctime.clone()); 
+                params.insert("Timestamp".to_string(), utctime.clone());
                 // println!("params: {:?}", params.clone());
 
                 let build_params = build_query_string(params.clone());
 
-                let format_str = format!("{}\n{}\n{}\n{}", "GET", WS_HOST, endpoint, build_params,); 
+                let format_str = format!("{}\n{}\n{}\n{}", "GET", WS_HOST, endpoint, build_params,);
 
                 // println!("format str:{}", format_str.clone());
 
@@ -157,9 +157,9 @@ impl<'a> WebSockets<'a> {
                     &secret_key,
                     &format_str,
                 )
-                .to_string();
+                    .to_string();
 
-                ::log::info!("signature: {}",signature.clone());
+                ::log::debug!("signature: {}",signature.clone());
 
                 let message = json!({
                     "AccessKeyId": params.get(&"AccessKeyId".to_string()),
@@ -168,16 +168,16 @@ impl<'a> WebSockets<'a> {
                     "Timestamp": params.get(&"Timestamp".to_string()),
                     "Signature": signature,
                     "op": "auth".to_string(),
-                    "type": "api".to_string(),   
+                    "type": "api".to_string(),
                 }); 
                 if let Some(ref mut socket) = self.socket {
                     socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                    ::log::info!("Write message {}", message.to_string());
+                    ::log::debug!("Write message {}", message.to_string());
                 };
                 Ok(())
             }
             Err(e) => {
-                ::log::info!("Error during handshake {}", e);
+                ::log::debug!("Error during handshake {}", e);
                 Err(Box::new(e))
             }
         }
@@ -189,7 +189,7 @@ impl<'a> WebSockets<'a> {
             socket.0.close(None)?;
             Ok(())
         } else {
-            ::log::info!("Not able to close the connection");
+            ::log::debug!("Not able to close the connection");
             Ok(())
         }
     }
@@ -202,181 +202,181 @@ impl<'a> WebSockets<'a> {
                 match message {
                     Message::Text(_) => {}
                     Message::Ping(bin) |
-                    Message::Pong(bin) |
-                    Message::Binary(bin) => {
-                        let mut d = GzDecoder::new(&*bin);
-                        let mut s = String::new();
-                        d.read_to_string(&mut s).unwrap();
-                        let msg: serde_json::Value = serde_json::from_str(&s)?;
-                        ::log::debug!("####:{:?}", msg);
-                        if msg.get("ping") != None {
-                            ::log::info!("####:{:?}", msg);
-                            if let Some(ref mut socket) = self.socket {
-                                let message = json!({
-                                    "pong": msg.get("ping"),       
-                                }); 
-                                socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                ::log::info!("Write message {}", message.to_string());
-                            };
-                        } 
-                        if let Some(op) = msg.get("op") {
-                            if op == "ping" {
+                        Message::Pong(bin) |
+                        Message::Binary(bin) => {
+                            let mut d = GzDecoder::new(&*bin);
+                            let mut s = String::new();
+                            d.read_to_string(&mut s).unwrap();
+                            let msg: serde_json::Value = serde_json::from_str(&s)?;
+                            ::log::debug!("####:{:?}", msg);
+                            if msg.get("ping") != None {
+                                ::log::debug!("####:{:?}", msg);
                                 if let Some(ref mut socket) = self.socket {
                                     let message = json!({
-                                        "op": "pong",
-                                        "ts": msg.get("ts"),
-                                        });
+                                        "pong": msg.get("ping"),
+                                    });
                                     socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                    ::log::info!("Write message {}", message.to_string());
+                                    ::log::debug!("Write message {}", message.to_string());
+                                };
+                            } 
+                            if let Some(op) = msg.get("op") {
+                                if op == "ping" {
+                                    if let Some(ref mut socket) = self.socket {
+                                        let message = json!({
+                                            "op": "pong",
+                                            "ts": msg.get("ts"),
+                                        });
+                                        socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
+                                        ::log::debug!("Write message {}", message.to_string());
+                                    }
                                 }
-                            }
 
-                            if op == "auth" {
-                                if let Some(err_code) = msg.get("err-code") {
-                                    if err_code == 0 {
-                                        for channel in &*CHANNELS.lock().unwrap() {
-                                            if channel.contains("account") {
-                                                for symbol in &*SYMBOLS.lock().unwrap() {
-                                                    let message = json!({
-                                                        "op": "sub",
-                                                        "cid": "hbdm-rust",
-                                                        "topic": format!("accounts.{}", symbol),
+                                if op == "auth" {
+                                    if let Some(err_code) = msg.get("err-code") {
+                                        if err_code == 0 {
+                                            for channel in &*CHANNELS.lock().unwrap() {
+                                                if channel.contains("account") {
+                                                    for symbol in &*SYMBOLS.lock().unwrap() {
+                                                        let message = json!({
+                                                            "op": "sub",
+                                                            "cid": "hbdm-rust",
+                                                            "topic": format!("accounts.{}", symbol),
                                                         });
 
-                                                    if let Some(ref mut socket) = self.socket {
-                                                        socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                                        ::log::info!("Write message {}", message.to_string());
-                                                    }
-                                                
-                                                }
-                                            }
+                                                        if let Some(ref mut socket) = self.socket {
+                                                            socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
+                                                            ::log::debug!("Write message {}", message.to_string());
+                                                        }
 
-                                            if channel.contains("order") {
-                                                for symbol in &*SYMBOLS.lock().unwrap() { 
-                                                    let message = json!({
-                                                        "op": "sub",
-                                                        "cid": "hbdm-rust",
-                                                        "topic": format!("orders.{}", symbol),
-                                                    });
-
-                                                    if let Some(ref mut socket) = self.socket {
-                                                        socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                                        ::log::info!("Write message {}", message.to_string());
                                                     }
                                                 }
-                                            }
-                                            
-                                            if channel.contains("position") {
-                                                for symbol in &*SYMBOLS.lock().unwrap() {
-                                                    let message = json!({
-                                                        "op": "sub",
-                                                        "cid": "hbdm-rust",
-                                                        "topic": format!("positions.{}", symbol),
-                                                    });
-    
-                                                    if let Some(ref mut socket) = self.socket {
-                                                        socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                                        ::log::info!("Write message {}", message.to_string());
+
+                                                if channel.contains("order") {
+                                                    for symbol in &*SYMBOLS.lock().unwrap() {
+                                                        let message = json!({
+                                                            "op": "sub",
+                                                            "cid": "hbdm-rust",
+                                                            "topic": format!("orders.{}", symbol),
+                                                        });
+
+                                                        if let Some(ref mut socket) = self.socket {
+                                                            socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
+                                                            ::log::debug!("Write message {}", message.to_string());
+                                                        }
                                                     }
                                                 }
-                                            }
 
-                                            if channel.contains("liquidation_order") {
-                                                for symbol in &*SYMBOLS.lock().unwrap() { 
-                                                    let message = json!({
-                                                        "op": "sub",
-                                                        "cid": "hbdm-rust",
-                                                        "topic": format!("public.{}.liquidation_orders", symbol),
-                                                    });
+                                                if channel.contains("position") {
+                                                    for symbol in &*SYMBOLS.lock().unwrap() {
+                                                        let message = json!({
+                                                            "op": "sub",
+                                                            "cid": "hbdm-rust",
+                                                            "topic": format!("positions.{}", symbol),
+                                                        });
 
-                                                    if let Some(ref mut socket) = self.socket {
-                                                        socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                                        ::log::info!("Write message {}", message.to_string());
+                                                        if let Some(ref mut socket) = self.socket {
+                                                            socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
+                                                            ::log::debug!("Write message {}", message.to_string());
+                                                        }
                                                     }
                                                 }
-                                            }
 
-                                            if channel.contains("funding_rate") {
-                                                for symbol in &*SYMBOLS.lock().unwrap() {
-                                                    let message = json!({
-                                                        "op": "sub",
-                                                        "cid": "hbdm-rust",
-                                                        "topic": format!("public.{}.funding_rate", symbol),
-                                                    });
+                                                if channel.contains("liquidation_order") {
+                                                    for symbol in &*SYMBOLS.lock().unwrap() {
+                                                        let message = json!({
+                                                            "op": "sub",
+                                                            "cid": "hbdm-rust",
+                                                            "topic": format!("public.{}.liquidation_orders", symbol),
+                                                        });
 
-                                                    if let Some(ref mut socket) = self.socket {
-                                                        socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
-                                                        ::log::info!("Write message {}", message.to_string());
+                                                        if let Some(ref mut socket) = self.socket {
+                                                            socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
+                                                            ::log::debug!("Write message {}", message.to_string());
+                                                        }
                                                     }
                                                 }
+
+                                                if channel.contains("funding_rate") {
+                                                    for symbol in &*SYMBOLS.lock().unwrap() {
+                                                        let message = json!({
+                                                            "op": "sub",
+                                                            "cid": "hbdm-rust",
+                                                            "topic": format!("public.{}.funding_rate", symbol),
+                                                        });
+
+                                                        if let Some(ref mut socket) = self.socket {
+                                                            socket.0.write_message(tungstenite::Message::Text(message.to_string()))?;
+                                                            ::log::debug!("Write message {}", message.to_string());
+                                                        }
+                                                    }
+                                                }
+
+
                                             }
 
 
                                         }
+                                    }
+                                }
 
-                                 
+                                if op == "notify" {
+                                    if let Some(topic) = msg.get("topic") {
+                                        if topic.to_string().contains("accounts") {
+                                            let account_update: AccountInfo = serde_json::from_str(&s)?;
+                                            (self.handler)(WebsocketEvent::AccountUpdate(account_update))?;
+
+                                        }
+
+                                        if topic.to_string().contains("orders") {
+                                            let order_update: OrderSubs = serde_json::from_str(&s)?;
+                                            (self.handler)(WebsocketEvent::OrderUpdate(order_update))?;
+                                        }
+
+                                        if topic.to_string().contains("positions") {
+                                            let position_update: PositionSubs = serde_json::from_str(&s)?;
+                                            (self.handler)(WebsocketEvent::PositionUpdate(position_update))?;
+                                        }
+
+                                        if topic.to_string().contains("liquidation_orders") {
+                                            let liquidation_orders: LiquidationSubs = serde_json::from_str(&s)?;
+                                            (self.handler)(WebsocketEvent::LiquidationUpdate(liquidation_orders))?;
+                                        }
+
+                                        if topic.to_string().contains("funding_rate") {
+                                            let funding_rate: FundingRateSubs = serde_json::from_str(&s)?;
+                                            (self.handler)(WebsocketEvent::FundingRateUpdate(funding_rate))?;
+                                        }
+
                                     }
                                 }
                             }
 
-                            if op == "notify" {
-                                if let Some(topic) = msg.get("topic") {
-                                    if topic.to_string().contains("accounts") {
-                                        let account_update: AccountInfo = serde_json::from_str(&s)?;
-                                        (self.handler)(WebsocketEvent::AccountUpdate(account_update))?;
+                            if let Some(data) = msg.get("ch") {
+                                if let Some(topic) = data.as_str() {
+                                    if topic.contains(DEPTH_ORDERBOOK) == true {
+                                        let depth_orderbook: OrderBook = serde_json::from_str(&s)?;
+                                        (self.handler)(WebsocketEvent::OrderBook(depth_orderbook))?;
+                                    } 
 
-                                    }
+                                    if topic.contains(PARTIAL_ORDERBOOK) == true {
+                                        let depth_orderbook: OrderBook = serde_json::from_str(&s)?;
+                                        (self.handler)(WebsocketEvent::OrderBook(depth_orderbook))?;
+                                    } 
 
-                                    if topic.to_string().contains("orders") {
-                                        let order_update: OrderSubs = serde_json::from_str(&s)?;
-                                        (self.handler)(WebsocketEvent::OrderUpdate(order_update))?;
-                                    }
+                                    if topic.contains(TRADE) == true {
+                                        let trade_detail: Trade = serde_json::from_str(&s)?;
+                                        (self.handler)(WebsocketEvent::TradeDetail(trade_detail))?;
+                                    } 
 
-                                    if topic.to_string().contains("positions") {
-                                        let position_update: PositionSubs = serde_json::from_str(&s)?;
-                                        (self.handler)(WebsocketEvent::PositionUpdate(position_update))?;
-                                    }
-
-                                    if topic.to_string().contains("liquidation_orders") {
-                                        let liquidation_orders: LiquidationSubs = serde_json::from_str(&s)?;
-                                        (self.handler)(WebsocketEvent::LiquidationUpdate(liquidation_orders))?;
-                                    }
-
-                                    if topic.to_string().contains("funding_rate") {
-                                        let funding_rate: FundingRateSubs = serde_json::from_str(&s)?;
-                                        (self.handler)(WebsocketEvent::FundingRateUpdate(funding_rate))?;
-                                    }
-
+                                    if topic.contains(KLINE) == true {
+                                        let klines: Klines = serde_json::from_str(&s)?;
+                                        (self.handler)(WebsocketEvent::Klines(klines))?;
+                                    } 
                                 }
-                            }
+                            };
+
+
                         }
-
-                        if let Some(data) = msg.get("ch") {
-                            if let Some(topic) = data.as_str() {
-                                if topic.contains(DEPTH_ORDERBOOK) == true {
-                                    let depth_orderbook: OrderBook = serde_json::from_str(&s)?;
-                                    (self.handler)(WebsocketEvent::OrderBook(depth_orderbook))?;
-                                } 
-
-                                if topic.contains(PARTIAL_ORDERBOOK) == true {
-                                    let depth_orderbook: OrderBook = serde_json::from_str(&s)?;
-                                    (self.handler)(WebsocketEvent::OrderBook(depth_orderbook))?;
-                                } 
-
-                                if topic.contains(TRADE) == true {
-                                    let trade_detail: Trade = serde_json::from_str(&s)?;
-                                    (self.handler)(WebsocketEvent::TradeDetail(trade_detail))?;
-                                } 
-
-                                if topic.contains(KLINE) == true {
-                                    let klines: Klines = serde_json::from_str(&s)?;
-                                    (self.handler)(WebsocketEvent::Klines(klines))?;
-                                } 
-                            }
-                        };
-
-
-                    }
                     Message::Close(e) => {
                         ::log::info!("Disconnected {:?}", e);
                     }

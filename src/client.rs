@@ -34,7 +34,6 @@ impl Client {
         }
     }
 
-    
     pub fn build_request(parameters: &BTreeMap<String, String>) -> String {
         let mut request = String::new();
         for (key, value) in parameters {
@@ -57,24 +56,25 @@ impl Client {
         let request = format!("https://{}{}?{}", API_HOST, endpoint, request_o,);
 
         let body = reqwest::blocking::get(request.as_str())?.text()?;
-        // ::log::info!("result: {:?}", body.clone());
+        // ::log::debug!("result: {:?}", body.clone());
 
         // check for errors
         let err_response: APIErrorResponse<serde_json::Value> = serde_json::from_str(body.as_str())?;
 
-        ::log::info!("err_response: {:?}", err_response);
+        ::log::debug!("err_response: {:?}", err_response);
 
 
+        // TODO: improve this
         match &err_response.status {
-            Some(status) => { 
-                if status == "error" 
+            Some(status) => {
+                if status == "error"
                 {
                     return Err(Box::new(HuobiError::ApiError(format!(
                         "result dump: {:?}", err_response
                         ))));
                 }
                 },
-            None => ::log::info!("err_response: {:?}", err_response),
+            None => ::log::debug!("err_response: {:?}", err_response),
         }
 
         Ok(body)
@@ -91,7 +91,7 @@ impl Client {
         params.insert("Timestamp".to_string(), get_timestamp());
 
 
-        println!("params: {:?}", params.clone());
+        ::log::debug!("params: {:?}", params.clone());
 
         let params = build_query_string(params);
         let signature = sign_hmac_sha256_base64(
@@ -108,27 +108,28 @@ impl Client {
             percent_encode(&signature.clone())
         );
 
-        ::log::info!("request: {:?}", request.clone());
+        ::log::debug!("request: {:?}", request.clone());
 
         let response = reqwest::blocking::get(request.as_str())?;
         let body = response.text()?;
 
-        ::log::info!("body: {:?}", body.clone());
+        ::log::debug!("body: {:?}", body.clone());
 
         // check for errors
         let err_response : APIErrorResponse<serde_json::Value>  = serde_json::from_str(body.as_str())?;
 
 
+        // TODO: improve this
         match &err_response.status {
-            Some(status) => { 
-                if status == "error" 
+            Some(status) => {
+                if status == "error"
                 {
                     return Err(Box::new(HuobiError::ApiError(format!(
                         "result dump: {:?}", err_response
                         ))));
                 }
                 },
-            None => ::log::info!("err_response: {:?}", err_response),
+            None => ::log::debug!("err_response: {:?}", err_response),
         }
 
         Ok(body)
@@ -147,7 +148,7 @@ impl Client {
 
         let api_host;
 
-        if endpoint.to_string() == "/v2/account/transfer".to_string() { 
+        if endpoint.to_string() == "/v2/account/transfer".to_string() {
             api_host = SPOT_API_HOST;
         }
         else{
@@ -182,24 +183,22 @@ impl Client {
         // let body = response.text()?;
         let body = response.text()?;
 
-        ::log::info!("body: {:?}", body.clone());
+        ::log::debug!("body: {:?}", body.clone());
 
         // check for errors
         let err_response: APIErrorResponse<serde_json::Value> = serde_json::from_str(body.as_str())?;
 
-        ::log::info!("err_response: {:?}", err_response);
-        
-
+        // TODO: improve this
         match &err_response.status {
-            Some(status) => { 
-                if status == "error" 
+            Some(status) => {
+                if status == "error"
                 {
                     return Err(Box::new(HuobiError::ApiError(format!(
                         "result dump: {:?}", err_response
                         ))));
                 }
                 },
-            None => ::log::info!("err_response: {:?}", err_response),
+            None => ::log::debug!("err_response: {:?}", err_response),
         }
 
 
