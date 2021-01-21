@@ -417,7 +417,7 @@ pub struct OrderBook {
 pub struct Tick {
     pub bids: Vec<Bids>,
     pub asks: Vec<Asks>,
-    pub mrid: Option<u32>,
+    pub mrid: Option<u64>,
     pub id: Option<u32>,
     pub ts: Option<u64>,
     pub version: Option<u32>,
