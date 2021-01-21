@@ -15,22 +15,17 @@ pub use self::market::*;
 pub struct Client {
     api_key: String,
     secret_key: String,
+    account_id: Option<u32>,
 }
 
-#[derive(Clone)]
-pub struct APIKey {
-    api_key: String,
-    secret_key: String,
-}
-
-static API_HOST: &'static str = "api.hbdm.com";
-static SPOT_API_HOST: &'static str = "api.huobi.pro";
+static API_HOST: &'static str = "api.huobi.pro";
 
 impl Client {
-    pub fn new(api_key: &str, secret_key: &str) -> Self {
+    pub fn new(api_key: &str, secret_key: &str, account_id: Option<u32>) -> Self {
         Client {
             api_key: api_key.into(),
             secret_key: secret_key.into(),
+            account_id,
         }
     }
 
@@ -74,7 +69,7 @@ impl Client {
                         ))));
                 }
                 },
-            None => ::log::debug!("err_response: {:?}", err_response),
+            None => ::log::error!("err_response: {:?}", err_response),
         }
 
         Ok(body)
@@ -129,7 +124,7 @@ impl Client {
                         ))));
                 }
                 },
-            None => ::log::debug!("err_response: {:?}", err_response),
+            None => ::log::error!("err_response: {:?}", err_response),
         }
 
         Ok(body)
@@ -146,26 +141,17 @@ impl Client {
         params.insert("SignatureVersion".to_string(), "2".to_string());
         params.insert("Timestamp".to_string(), get_timestamp());
 
-        let api_host;
-
-        if endpoint.to_string() == "/v2/account/transfer".to_string() {
-            api_host = SPOT_API_HOST;
-        }
-        else{
-            api_host = API_HOST;
-        }
-
         let params = build_query_string(params);
         let signature = sign_hmac_sha256_base64(
             &self.secret_key,
-            &format!("{}\n{}\n{}\n{}", "POST", api_host, endpoint, params,),
+            &format!("{}\n{}\n{}\n{}", "POST", API_HOST, endpoint, params,),
         )
         .to_string();
 
 
         let request = format!(
                 "https://{}{}?{}&Signature={}",
-                api_host,
+                API_HOST,
                 endpoint,
                 params,
                 percent_encode(&signature.clone())
@@ -245,7 +231,7 @@ pub fn get_timestamp() -> String {
 pub fn build_headers(post_method: bool ) -> APIResult<HeaderMap> {
     let mut custom_headers = HeaderMap::new();
 
-    custom_headers.insert(USER_AGENT, HeaderValue::from_static("hbdm-rs"));
+    custom_headers.insert(USER_AGENT, HeaderValue::from_static("huobi-rs"));
     if post_method {
         custom_headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         custom_headers.insert(ACCEPT, HeaderValue::from_static("application/json"));

@@ -13,8 +13,8 @@ use flate2::read::GzDecoder;
 use lazy_static::lazy_static;
 use std::sync::Mutex;
 
-static WEBSOCKET_URL: &'static str = "wss://api.hbdm.com";
-static WS_HOST: &'static str = "api.hbdm.com";
+static WEBSOCKET_URL: &'static str = "wss://api.huobi.pro";
+static WS_HOST: &'static str = "api.huobi.pro";
 
 static KLINE: &'static str = "kline";
 static TRADE: &'static str = "trade.detail";

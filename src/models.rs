@@ -16,25 +16,159 @@ where
     T::from_str(&s).map_err(de::Error::custom)
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct APIResponse<R> {
     pub status: String,
     pub data: R,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct APIErrorResponse<R> {
     pub status: Option<String>,
-
-    pub err_code: Option<u32>,
-
+    #[serde(rename = "err-code")]
+    pub err_code: Option<String>,
+    #[serde(rename = "err-msg")]
     pub err_msg: Option<String>,
-
-    pub ts: Option<u64>,
-
     pub data: Option<R>,
+}
 
-    pub tick: Option<R>,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Balance {
+    pub id: u32,
+    #[serde(rename = "type")]
+    pub account_type: String,
+    pub state: String,
+    pub list: Vec<Asset>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Asset {
+    pub currency: String,
+    #[serde(rename = "type")]
+    pub trade_type: String,
+    #[serde(deserialize_with = "string_as_f64")]
+    pub balance: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Account {
+    pub state: String,
+
+    #[serde(rename = "id")]
+    pub account_id: u32,
+
+    #[serde(rename = "type")]
+    pub account_type: String,
+
+    #[serde(rename = "subtype")]
+    pub account_subtype: String,
+}
+
+pub type Currency = Vec<String>;
+pub type Timestamp = u64;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Pair {
+    #[serde(rename = "base-currency")]
+    pub base_currency: String, // "eth", "btc"
+
+    #[serde(rename = "quote-currency")]
+    pub quote_currency: String, // "eth", "btc"
+
+    #[serde(rename = "price-precision")]
+    pub price_precision: u32,
+
+    #[serde(rename = "amount-precision")]
+    pub amount_precision: u32,
+
+    #[serde(rename = "symbol-partition")]
+    pub symbol_partition: String,
+
+    #[serde(rename = "symbol")] // "edubtc", "linkusdt"
+    pub symbol: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Kline {
+    pub id: u32,
+    pub amount: f64,
+    pub count: u32,
+    pub open: f64,
+    pub close: f64,
+    pub low: f64,
+    pub high: f64,
+    pub vol: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Ticker {
+    pub amount: f64,
+    pub count: u32,
+    pub open: f64,
+    pub close: f64,
+    pub low: f64,
+    pub high: f64,
+    pub vol: f64,
+    pub symbol: String,
+}
+
+// #[derive(Debug, Serialize, Deserialize, Clone)]
+// pub struct Balance {
+//     pub id: u32,
+//     #[serde(rename = "type")]
+//     pub account_type: String,
+//     pub state: String,
+//     pub list: Vec<Asset>,
+// }
+
+// #[derive(Debug, Serialize, Deserialize, Clone)]
+// pub struct Asset {
+//     pub currency: String,
+//     #[serde(rename = "type")]
+//     pub trade_type: String,
+//     #[serde(deserialize_with = "string_as_f64")]
+//     pub balance: f64,
+// }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Order {
+    pub id: u64,
+    pub symbol: String,
+    pub source: String,
+    pub state: String,
+
+    #[serde(rename = "account-id")]
+    pub account_id: u64,
+
+    #[serde(deserialize_with = "string_as_f64")]
+    pub amount: f64,
+
+    #[serde(deserialize_with = "string_as_f64")]
+    pub price: f64,
+
+    #[serde(rename = "created-at")]
+    pub created_at: u64,
+
+    #[serde(rename = "type")]
+    pub order_type: String,
+
+    #[serde(rename = "field-amount")]
+    #[serde(deserialize_with = "string_as_f64")]
+    pub field_amount: f64,
+
+    #[serde(rename = "field-cash-amount")]
+    #[serde(deserialize_with = "string_as_f64")]
+    pub field_cash_amount: f64,
+
+    #[serde(rename = "field-fees")]
+    #[serde(deserialize_with = "string_as_f64")]
+    pub field_fees: f64,
+
+    #[serde(rename = "finished-at")]
+    pub finished_at: u64,
+
+    #[serde(rename = "canceled-at")]
+    pub canceled_at: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -60,31 +194,30 @@ pub struct AccountInfo {
     pub status: Option<String>,
     pub data: Vec<Account>,
     pub ts: u64,
-    
     pub op: Option<String>,
     pub topic: Option<String>,
     pub event: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Account {
-    pub symbol: String,
-    pub contract_code: String,
-    pub margin_balance: f64,
-    pub margin_static: f64,
-    pub margin_position: f64,
-    pub margin_frozen: f64,
-    pub margin_available: f64,
-    pub profit_real: f64,
-    pub profit_unreal: f64,
-    pub risk_rate: Option<f64>,
-    pub liquidation_price: Option<f64>,
-    pub withdraw_available: f64,
-    pub lever_rate: f64,
-    pub adjust_factor: f64,
-    pub ts: Option<u64>,
-    pub event: Option<u64>,
-}
+// #[derive(Debug, Serialize, Deserialize, Clone)]
+// pub struct Account {
+//     pub symbol: String,
+//     pub contract_code: String,
+//     pub margin_balance: f64,
+//     pub margin_static: f64,
+//     pub margin_position: f64,
+//     pub margin_frozen: f64,
+//     pub margin_available: f64,
+//     pub profit_real: f64,
+//     pub profit_unreal: f64,
+//     pub risk_rate: Option<f64>,
+//     pub liquidation_price: Option<f64>,
+//     pub withdraw_available: f64,
+//     pub lever_rate: f64,
+//     pub adjust_factor: f64,
+//     pub ts: Option<u64>,
+//     pub event: Option<u64>,
+// }
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -240,12 +373,12 @@ pub struct OrderInfo {
     pub ts: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Order {
-    pub order_id: u64,
-    pub order_id_str: String,
-    pub client_order_id: Option<u64>,
-}
+// #[derive(Debug, Serialize, Deserialize, Clone)]
+// pub struct Order {
+//     pub order_id: u64,
+//     pub order_id_str: String,
+//     pub client_order_id: Option<u64>,
+// }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BatchOrder {
@@ -402,7 +535,7 @@ pub struct AccountTransferResult {
     pub code: u64,
     pub data: Option<u64>,
     pub success: bool,
-    pub message: String, 
+    pub message: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -420,7 +553,7 @@ pub struct Tick {
     pub mrid: Option<u64>,
     pub id: Option<u32>,
     pub ts: Option<u64>,
-    pub version: Option<u32>,
+    pub version: Option<u64>,
     pub ch: Option<String>,
     pub event: Option<String>,
 }
@@ -446,20 +579,20 @@ pub struct Klines {
     pub ts: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Kline {
-    #[serde(rename = "id")]
-    pub timestamp: u64,
-    #[serde(rename = "vol")]
-    pub volume: f64,
-    pub count: f64,
-    pub open: f64,
-    pub close: f64,
-    pub low: f64,
-    pub high: f64,
-    pub amount: f64,
-    pub mrid: Option<u64>,
-}
+// #[derive(Debug, Serialize, Deserialize, Clone)]
+// pub struct Kline {
+//     #[serde(rename = "id")]
+//     pub timestamp: u64,
+//     #[serde(rename = "vol")]
+//     pub volume: f64,
+//     pub count: f64,
+//     pub open: f64,
+//     pub close: f64,
+//     pub low: f64,
+//     pub high: f64,
+//     pub amount: f64,
+//     pub mrid: Option<u64>,
+// }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Trade {
@@ -713,7 +846,7 @@ pub struct MasterSubTransferInfo {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MasterSubTransfer {
     pub order_id: String,
-} 
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MasterSubTransferRecordInfo {

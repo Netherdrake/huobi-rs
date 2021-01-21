@@ -15,13 +15,13 @@ pub enum HuobiError {
 impl fmt::Display for HuobiError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.clone() {
-            HuobiError::ApiError(why) => write!(f, "ApiError: {}", why),
+            HuobiError::ApiError(why) => write!(f, "ApiError: {:?}", why),
         }
     }
 }
 
 impl Error for HuobiError {
     fn description(&self) -> &str {
-        "HBDM Swap Error"
+        "Huobi Error"
     }
 }

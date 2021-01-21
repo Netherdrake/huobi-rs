@@ -1,5 +1,5 @@
 [package]
-name = "hbdm_swap"
+name = "huobi_rs"
 version = "0.1.0"
 authors = ["QiaoXiaofeng<andyjoe318@gmail.com>"]
 edition = "2018"
@@ -26,4 +26,4 @@ lazy_static = "1.4.0"
 rand = "0.7.3"
 
 [lib]
-name = "hbdm_swap"
+name = "huobi_rs"
