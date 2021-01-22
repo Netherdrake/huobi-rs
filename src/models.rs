@@ -6,16 +6,6 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
-fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
-where
-    T: FromStr,
-    T::Err: Display,
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    T::from_str(&s).map_err(de::Error::custom)
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct APIResponse<R> {
     pub status: String,
@@ -129,6 +119,12 @@ pub struct Ticker {
 //     #[serde(deserialize_with = "string_as_f64")]
 //     pub balance: f64,
 // }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OrderReceipt {
+    #[serde(rename = "data")]
+    #[serde(deserialize_with = "string_as_u64")]
+    pub order_id: u64,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Order {
@@ -152,23 +148,17 @@ pub struct Order {
     #[serde(rename = "type")]
     pub order_type: String,
 
-    #[serde(rename = "field-amount")]
+    #[serde(rename = "filled-amount")]
     #[serde(deserialize_with = "string_as_f64")]
-    pub field_amount: f64,
+    pub filled_amount: f64,
 
-    #[serde(rename = "field-cash-amount")]
+    #[serde(rename = "filled-cash-amount")]
     #[serde(deserialize_with = "string_as_f64")]
-    pub field_cash_amount: f64,
+    pub filled_cash_amount: f64,
 
-    #[serde(rename = "field-fees")]
+    #[serde(rename = "filled-fees")]
     #[serde(deserialize_with = "string_as_f64")]
-    pub field_fees: f64,
-
-    #[serde(rename = "finished-at")]
-    pub finished_at: u64,
-
-    #[serde(rename = "canceled-at")]
-    pub canceled_at: u64,
+    pub filled_fees: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -371,41 +361,6 @@ pub struct OrderInfo {
     pub status: String,
     pub data: Order,
     pub ts: u64,
-}
-
-// #[derive(Debug, Serialize, Deserialize, Clone)]
-// pub struct Order {
-//     pub order_id: u64,
-//     pub order_id_str: String,
-//     pub client_order_id: Option<u64>,
-// }
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BatchOrder {
-    pub status: String,
-    pub data: BatchOrderResult,
-    pub ts: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BatchOrderResult {
-    pub errors: Vec<BatchOrderErrors>,
-    pub success: Vec<BatchOrderSuccess>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BatchOrderErrors {
-    pub index: u32,
-    pub err_code: u32,
-    pub err_msg: String, 
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BatchOrderSuccess {
-    pub index: u32,
-    pub order_id: u64,
-    pub order_id_str: String,
-    pub client_order_id: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -616,33 +571,6 @@ pub struct TradeDetailItem {
     pub id: u64,
     pub price: f64,
     pub direction: String,
-}
-
-fn string_as_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_any(F64Visitor)
-}
-
-struct F64Visitor;
-impl<'de> Visitor<'de> for F64Visitor {
-    type Value = f64;
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a string representation of a f64")
-    }
-    fn visit_str<E>(self, value: &str) -> Result<f64, E>
-    where
-        E: de::Error,
-    {
-        if let Ok(integer) = value.parse::<i32>() {
-            Ok(integer as f64)
-        } else {
-            value.parse::<f64>().map_err(|err| {
-                E::invalid_value(Unexpected::Str(value), &"a string representation of a f64")
-            })
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -942,7 +870,7 @@ pub struct OrderSubs {
     pub profit: f64,
     pub liquidation_type: String,
     pub trade: Vec<TradeSubItem>,
-} 
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TradeSubItem {
@@ -1270,3 +1198,74 @@ pub struct LiquidationOrders {
     pub current_page: u32,
     pub total_size: u32,
 }
+
+//
+// serialization methods
+//
+
+fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    T: FromStr,
+    T::Err: Display,
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    T::from_str(&s).map_err(de::Error::custom)
+}
+
+
+fn string_as_u64<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_any(U64Visitor)
+}
+
+struct U64Visitor;
+impl<'de> Visitor<'de> for U64Visitor {
+    type Value = u64;
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a string representation of a f64")
+    }
+    fn visit_str<E>(self, value: &str) -> Result<u64, E>
+    where
+        E: de::Error,
+    {
+        if let Ok(integer) = value.parse::<i32>() {
+            Ok(integer as u64)
+        } else {
+            value.parse::<u64>().map_err(|err| {
+                E::invalid_value(Unexpected::Str(value), &"a string representation of a u64")
+            })
+        }
+    }
+}
+
+
+fn string_as_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_any(F64Visitor)
+}
+
+struct F64Visitor;
+impl<'de> Visitor<'de> for F64Visitor {
+    type Value = f64;
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a string representation of a f64")
+    }
+    fn visit_str<E>(self, value: &str) -> Result<f64, E>
+    where
+        E: de::Error,
+    {
+        if let Ok(integer) = value.parse::<i32>() {
+            Ok(integer as f64)
+        } else {
+            value.parse::<f64>().map_err(|err| {
+                E::invalid_value(Unexpected::Str(value), &"a string representation of a f64")
+            })
+        }
+    }
+}
+

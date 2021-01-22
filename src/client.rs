@@ -51,7 +51,7 @@ impl Client {
         let request = format!("https://{}{}?{}", API_HOST, endpoint, request_o,);
 
         let body = reqwest::blocking::get(request.as_str())?.text()?;
-        // ::log::debug!("result: {:?}", body.clone());
+        ::log::debug!("result: {:?}", body.clone());
 
         // check for errors
         let err_response: APIErrorResponse<serde_json::Value> = serde_json::from_str(body.as_str())?;
