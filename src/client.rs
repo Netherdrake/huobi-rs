@@ -166,7 +166,6 @@ impl Client {
             .send()?
             ;
 
-        // let body = response.text()?;
         let body = response.text()?;
 
         ::log::debug!("body: {:?}", body.clone());

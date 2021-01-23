@@ -8,6 +8,7 @@ impl Client {
     // Get Orderbook
     pub fn get_orderbook<S: Into<String>>(&self, symbol: S, orderbook_type: S) -> APIResult<OrderBook>
     {
+        let symbol: String = symbol.into().to_lowercase();
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
         parameters.insert("type".into(), orderbook_type.into());
@@ -23,6 +24,7 @@ impl Client {
     pub fn get_klines<S1, S2, S3, S4, S5>(&self, symbol: S1, interval: S2, limit: S3, start_time: S4, end_time: S5) -> APIResult<Klines>
     where S1: Into<String>, S2: Into<String>, S3: Into<Option<u32>>, S4: Into<Option<u64>>, S5: Into<Option<u64>>
     {
+        let symbol: String = symbol.into().to_lowercase();
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
         parameters.insert("symbol".into(), symbol.into());
@@ -42,6 +44,7 @@ impl Client {
     pub fn get_market_merged<S1>(&self, symbol: S1) -> APIResult<MergedInfo>
     where S1: Into<String>
     {
+        let symbol: String = symbol.into().to_lowercase();
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
         parameters.insert("symbol".into(), symbol.into());

@@ -102,23 +102,6 @@ pub struct Ticker {
     pub symbol: String,
 }
 
-// #[derive(Debug, Serialize, Deserialize, Clone)]
-// pub struct Balance {
-//     pub id: u32,
-//     #[serde(rename = "type")]
-//     pub account_type: String,
-//     pub state: String,
-//     pub list: Vec<Asset>,
-// }
-
-// #[derive(Debug, Serialize, Deserialize, Clone)]
-// pub struct Asset {
-//     pub currency: String,
-//     #[serde(rename = "type")]
-//     pub trade_type: String,
-//     #[serde(deserialize_with = "string_as_f64")]
-//     pub balance: f64,
-// }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OrderReceipt {
     #[serde(rename = "data")]
@@ -159,6 +142,41 @@ pub struct Order {
     #[serde(rename = "filled-fees")]
     #[serde(deserialize_with = "string_as_f64")]
     pub filled_fees: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewOrder {
+    pub id: u64,
+    pub symbol: String,
+    pub source: String,
+    pub state: String,
+
+    #[serde(rename = "account-id")]
+    pub account_id: u64,
+
+    #[serde(deserialize_with = "string_as_f64")]
+    pub amount: f64,
+
+    #[serde(deserialize_with = "string_as_f64")]
+    pub price: f64,
+
+    #[serde(rename = "created-at")]
+    pub created_at: u64,
+
+    #[serde(rename = "type")]
+    pub order_type: String,
+
+    #[serde(rename = "field-amount")]
+    #[serde(deserialize_with = "string_as_f64")]
+    pub field_amount: f64,
+
+    #[serde(rename = "field-cash-amount")]
+    #[serde(deserialize_with = "string_as_f64")]
+    pub field_cash_amount: f64,
+
+    #[serde(rename = "field-fees")]
+    #[serde(deserialize_with = "string_as_f64")]
+    pub field_fees: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -316,182 +334,12 @@ pub struct TradeItem {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OpenOrders {
-    pub status: String,
-    pub data: OpenOrderData,
-    pub ts: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OpenOrderData {
-    pub orders: Vec<OpenOrderItem>,
-    pub total_page: u32,
-    pub current_page: u32,
-    pub total_size: u32
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OpenOrderItem {
-    pub symbol: String,
-    pub contract_code: String,
-    pub volume: f64,
-    pub price: f64,
-    pub order_price_type: String,
-    pub order_type: u32,
-    pub direction: String,
-    pub offset: String,
-    pub lever_rate: u32,
-    pub order_id: u64,
-    pub order_id_str: String,
-    pub client_order_id: u64,
-    pub created_at: u64,
-    pub trade_volume: f64,
-    pub trade_turnover: f64,
-    pub fee: f64,
-    pub fee_asset: String,
-    pub trade_avg_price: Option<f64>,
-    pub margin_frozen: f64,
-    pub profit: f64,
-    pub status: u32,
-    pub order_source: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OrderInfo {
     pub status: String,
     pub data: Order,
     pub ts: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrderCancelInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: OrderCancel,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrderCancel {
-    pub errors: Vec<CancelError>,
-    pub successes: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CancelError {
-    pub order_id: String,
-    pub err_code: u32,
-    pub err_msg: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct HisOrders {
-    pub status: String,
-    pub data: HisOrderList,
-    pub ts: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct HisOrderList {
-    pub orders: Vec<HisOrderItem>,
-    pub total_page: u32,
-    pub current_page: u32,
-    pub total_size: u32,
-}
-
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct HisOrderItem {
-    pub order_id: u64,
-    pub order_id_str: String,
-    pub symbol: String,
-    pub contract_code: String,
-    pub lever_rate: u32,
-    pub direction: String,
-    pub offset: String,
-    pub volume: u32,
-    pub price: f64,
-    pub create_date: u64,
-    pub order_source: String,
-    pub order_price_type: u32,
-    pub margin_frozen: f64,
-    pub profit: f64,
-    pub trade_volume: u32,
-    pub trade_turnover: f64,
-    pub fee: f64,
-    pub fee_asset: String,
-    pub trade_avg_price: Option<f64>,
-    pub status: u32,
-    pub order_type: u32,
-    pub liquidation_type: String
-}
-
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MatchResults {
-    pub status: String,
-    pub data: MatchTrades,
-    pub ts: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MatchTrades {
-    pub trades: Vec<MatchTradeItem>,
-    pub total_page: u32,
-    pub current_page: u32,
-    pub total_size: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MatchTradeItem {
-    pub match_id: u64,
-    pub id: String,
-    pub order_id: u64,
-    pub order_id_str: String,
-    pub symbol: String,
-    pub order_source: String,
-    pub contract_code: String,
-    pub direction: String,
-    pub offset: String,
-    pub trade_volume: u32,
-    pub trade_price: f64,
-    pub trade_turnover: u32,
-    pub create_date: u64,
-    pub offset_profitloss: f64,
-    pub trade_fee: f64,
-    pub fee_asset: String,
-    pub role: String,
-}
-
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LightningCloseResult {
-    pub status: String,
-    pub ts: u64,
-    pub data: LightningCloseItem,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LightningCloseItem {
-    pub order_id: u64,
-    pub order_id_str: String,
-    pub client_order_id: Option<u64>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AccountTransfer {
-    pub code: u64,
-    pub success: u64,
-    pub message: String,
-    pub data: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AccountTransferResult {
-    pub code: u64,
-    pub data: Option<u64>,
-    pub success: bool,
-    pub message: String,
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OrderBook {
@@ -571,236 +419,6 @@ pub struct TradeDetailItem {
     pub id: u64,
     pub price: f64,
     pub direction: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BatchOrderRequest {
-    pub orders_data: Vec<OrderRequest>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrderRequest {
-   pub contract_code: String,
-   pub client_order_id: Option<u64>,
-   pub price: Option<f64>,
-   pub volume: u32, 
-   pub direction: String,
-   pub offset: String,
-   pub lever_rate: u32,
-   pub order_price_type: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SubAccountList {
-    pub status: String,
-    pub ts: u64,
-    pub data: Vec<SubAccount>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SubAccount {
-    pub sub_uid: u64,
-    pub list: Vec<SubAccountItem>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SubAccountItem {
-    pub symbol: String,
-    pub contract_code: String,
-    pub margin_balance: f64,
-    pub liquidation_price: Option<f64>,
-    pub risk_rate: Option<f64>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SubAccountInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: Vec<SubAccountDetail>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SubAccountDetail {
-    pub symbol: String,
-    pub contract_code: String,
-    pub margin_balance: f64,
-    pub margin_position: f64,
-    pub margin_frozen: f64,
-    pub margin_available: f64,
-    pub profit_real: f64,
-    pub profit_unreal: f64,
-    pub risk_rate: Option<f64>,
-    pub liquidation_price: Option<f64>,
-    pub withdraw_available: f64,
-    pub lever_rate: u32,
-    pub adjust_factor: f64,
-    pub margin_static: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SubPositionInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: Vec<SubPositionDetail>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SubPositionDetail {
-    pub symbol: String,
-    pub contract_code: String,
-    pub volume: f64,
-    pub available: f64,
-    pub frozen: f64,
-    pub cost_open: f64,
-    pub cost_hold: f64,
-    pub profit_unreal: f64,
-    pub profit_rate: f64,
-    pub profit: f64,
-    pub position_margin: f64,
-    pub lever_rate: u32,
-    pub direction: String,
-    pub last_price: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct FinancialRecord {
-    pub status: String,
-    pub ts: u64,
-    pub data: FinancialRecordList,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct FinancialRecordList {
-    pub financial_record: Vec<FinancialRecordItem>,
-    pub total_page: u32,
-    pub current_page: u32,
-    pub total_size: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct FinancialRecordItem {
-    pub id: u64,
-    pub ts: u64,
-    pub symbol: String,
-    pub contract_code: String,
-    #[serde(rename = "type")]
-    pub trade_type: u32,
-    pub amount: f64,
-
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrderLimitInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: OrderLimitList,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrderLimitList {
-    pub order_price_type: String,
-    pub list: Vec<OrderLimitItem>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrderLimitItem {
-    pub symbol: String,
-    pub contract_code: String,
-    pub open_limit: f64,
-    pub close_limit: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct FeeInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: Vec<Fee>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Fee {
-    pub symbol: String,
-    pub contract_code: String,
-    pub fee_asset: String,
-    pub open_maker_fee: String,
-    pub open_taker_fee: String,
-    pub close_maker_fee: String,
-    pub close_taker_fee: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TransferLimitInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: Vec<TransferLimit>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TransferLimit {
-    pub symbol: String,
-    pub contract_code: String,
-    pub transfer_in_max_each: f64,
-    pub transfer_in_min_each: f64,
-    pub transfer_out_max_each: f64,
-    pub transfer_out_min_each: f64,
-    pub transfer_in_max_daily: f64,
-    pub transfer_out_max_daily: f64,
-    pub net_transfer_in_max_daily: f64,
-    pub net_transfer_out_max_daily: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PositionLimitInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: Vec<PositionLimit>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PositionLimit {
-    pub symbol: String,
-    pub contract_code: String,
-    pub buy_limit: f64,
-    pub sell_limit: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MasterSubTransferInfo {
-    pub status: String,
-    pub ts: u64, 
-    pub data: MasterSubTransfer,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MasterSubTransfer {
-    pub order_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MasterSubTransferRecordInfo {
-    pub status: String,
-    pub ts: u64,
-    pub data: Option<MasterSubTransferRecord>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MasterSubTransferRecord {
-    pub transfer_record: Vec<MasterSubTransferRecordItem>,
-    pub total_page: u32,
-    pub current_page: u32,
-    pub total_size: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MasterSubTransferRecordItem {
-    pub id: String,
-    pub ts: u64,
-    pub symbol: String,
-    pub contract_code: String,
-    pub sub_uid: String,
-    pub sub_account_name: String,
-    pub transfer_type: u32,
-    pub amount: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

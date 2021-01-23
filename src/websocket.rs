@@ -62,7 +62,7 @@ impl<'a> WebSockets<'a> {
                 self.socket = Some(answer);
                 for channel in &channels {
                     if channel.contains("orderbook") && !channel.contains("partial_orderbook") {
-                        for symbol in &symbols { 
+                        for symbol in &symbols {
                             let message = json!({
                                 "sub": format!("market.{}.depth.step6", symbol),
                                 "id": "rustclient"
