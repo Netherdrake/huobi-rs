@@ -15,7 +15,7 @@ base64 = "*"
 crypto = { version = "*", package = "rust-crypto" }
 data-encoding = "*"
 chrono = "*"
-percent-encoding = "*"
+percent-encoding = "1.0.1"
 log = "*"
 simple_logger = "*"
 tungstenite = "*"
